@@ -1,5 +1,7 @@
 # LGTM Reaction
 
+![](docs/assets/screen-record.gif)
+
 Send LGTM reaction as image or GIF when we say `lgtm`.  
 Currently supports [GIPHY](https://giphy.com).
 
