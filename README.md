@@ -37,3 +37,7 @@ jobs:
         with:
           trigger: 'looks good to me' # default: lgtm
 ```
+
+## License
+
+[MIT License](LICENSE)
