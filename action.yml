@@ -5,7 +5,7 @@ inputs:
   trigger:
     description: 'Trigger comment on issue to send reaction'
     required: false
-    default: ['lgtm', 'LGTM']
+    default: 'lgtm'
 runs:
   using: 'docker'
   image: 'Dockerfile'
