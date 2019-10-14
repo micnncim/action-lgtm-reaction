@@ -1,0 +1,14 @@
+name: 'LGTM Reaction'
+description: 'Send LGTM reaction as image or GIF '
+author: 'micnncim'
+inputs:
+  trigger:
+    description: 'Trigger comment on issue to send reaction'
+    required: false
+    default: ['lgtm', 'LGTM']
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+branding:
+  icon: 'circle'
+  color: 'black'
