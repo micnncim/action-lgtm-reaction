@@ -22,7 +22,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIPHY_API_KEY: ${{ secrets.GIPHY_API_KEY }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_COMMENT: ${{ github.event }}
+          GITHUB_COMMENT_BODY: ${{ github.event.comment.body }}
+          GITHUB_ISSUE_NUMBER: ${{ github.event.issue.number }}
         with:
           trigger: 'looks good to me' # default: lgtm
 ```
