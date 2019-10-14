@@ -13,6 +13,10 @@ Currently supports [GIPHY](https://giphy.com).
 
 ### Create Workflow
 
+The default trigger comment is `lgtm`, but you can specify any trigger comment with `jobs.<job_id>.steps.with`.  
+The trigger comment match a comment in case-insensitive.
+It means we can use the both of `lgtm` and `LGTM` as a trigger (sure, `Lgtm` and `lGtm` can be used).
+
 ```yaml
 name: Send LGTM reaction
 on:
