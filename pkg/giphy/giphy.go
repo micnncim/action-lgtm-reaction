@@ -61,6 +61,7 @@ func (c *Client) Search(q string) ([]*Giphy, error) {
 	query := req.URL.Query()
 	query.Add("api_key", c.apiKey)
 	query.Add("q", q)
+	req.URL.RawQuery = query.Encode()
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
