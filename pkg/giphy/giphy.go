@@ -14,15 +14,15 @@ const gifURLFormat = "https://media.giphy.com/media/%s/giphy.gif"
 const apiBaseURLFormat = "https://api.giphy.com/v1/%s"
 
 type Giphy struct {
-	Type   string `json:"type"`
-	ID     string `json:"id"`
-	URL    string `json:"url"`
-	Title  string `json:"title"`
-	GIFURL string `json:"gifurl"`
+	Type  string `json:"type"`
+	ID    string `json:"id"`
+	URL   string `json:"url"`
+	Title string `json:"title"`
 }
 
 func (g *Giphy) GIFURLInMarkdownStyle() string {
-	return fmt.Sprintf("![](%s)", g.GIFURL)
+	gifURL := fmt.Sprintf(gifURLFormat, g.ID)
+	return fmt.Sprintf("![](%s)", gifURL)
 }
 
 type Payload struct {
@@ -75,9 +75,5 @@ func (c *Client) Search(q string) ([]*Giphy, error) {
 		return nil, err
 	}
 
-	data := payload.Data
-	for _, g := range data {
-		g.GIFURL = fmt.Sprintf(gifURLFormat, g.ID)
-	}
-	return data, nil
+	return payload.Data, nil
 }
