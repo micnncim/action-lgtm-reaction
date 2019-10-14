@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/micnncim/action-lgtm-reaction/pkg/giphy"
 	"github.com/micnncim/action-lgtm-reaction/pkg/github"
@@ -55,7 +57,11 @@ func main() {
 		os.Exit(1)
 	}
 	ctx := context.Background()
-	comment := giphies[0].GIFURLInMarkdownStyle()
+
+	rand.Seed(time.Now().Unix())
+	index := rand.Intn(len(giphies))
+	comment := giphies[index].GIFURLInMarkdownStyle()
+
 	if err := githubClient.CreateIssueComment(ctx, owner, repo, number, comment); err != nil {
 		os.Exit(1)
 	}
