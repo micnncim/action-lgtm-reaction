@@ -16,30 +16,49 @@ import (
 )
 
 var (
-	githubToken             = os.Getenv("GITHUB_TOKEN")
-	giphyAPIKey             = os.Getenv("GIPHY_API_KEY")
-	githubRepository        = os.Getenv("GITHUB_REPOSITORY")
-	githubIssueNumber       = os.Getenv("GITHUB_ISSUE_NUMBER")
-	githubCommentBody       = os.Getenv("GITHUB_COMMENT_BODY")
-	githubCommentID         = os.Getenv("GITHUB_COMMENT_ID")
-	githubPullRequestNumber = os.Getenv("GITHUB_PULL_REQUEST_NUMBER")
-	githubReviewBody        = os.Getenv("GITHUB_REVIEW_BODY")
-	githubReviewID          = os.Getenv("GITHUB_REVIEW_ID")
-	trigger                 = os.Getenv("INPUT_TRIGGER")
-	override                = os.Getenv("INPUT_OVERRIDE")
+	githubToken   = os.Getenv("GITHUB_TOKEN")
+	giphyAPIKey   = os.Getenv("GIPHY_API_KEY")
+	githubContext = os.Getenv("GITHUB")
+	trigger       = os.Getenv("INPUT_TRIGGER")
+	override      = os.Getenv("INPUT_OVERRIDE")
 )
 
+type GitHubContext struct {
+	Repository string `json:"repository"`
+	Event      struct {
+		Issue struct {
+			Number int `json:"number"`
+		}
+		Comment struct {
+			ID   int    `json:"id"`
+			Body string `json:"body"`
+		} `json:"comment"`
+		PullRequest struct {
+			Number int `json:"number"`
+		} `json:"pull_request"`
+		Review struct {
+			ID   int    `json:"id"`
+			Body string `json:"body"`
+		} `json:"review"`
+	} `json:"event"`
+}
+
 func main() {
+	ghContext, err := parseGitHubContext(githubContext)
+	if err != nil {
+		exit("unable to parse github context: %v\n", err)
+	}
+
 	needOverride, err := strconv.ParseBool(override)
 	if err != nil {
 		exit("unable to parse string to bool in override flag: %v\n", err)
 	}
 
-	matchComment, err := matchTrigger(trigger, githubCommentBody)
+	matchComment, err := matchTrigger(trigger, ghContext.Event.Comment.Body)
 	if err != nil {
 		exit("invalid trigger: %v\n", err)
 	}
-	matchReview, err := matchTrigger(trigger, githubReviewBody)
+	matchReview, err := matchTrigger(trigger, ghContext.Event.Review.Body)
 	if err != nil {
 		exit("invalid trigger: %v\n", err)
 	}
@@ -70,9 +89,9 @@ func main() {
 		exit("unable to create github client: %v\n", err)
 	}
 
-	slugs := strings.Split(githubRepository, "/")
+	slugs := strings.Split(ghContext.Repository, "/")
 	if len(slugs) != 2 {
-		exit("invalid githubRepository: %v\n", githubRepository)
+		exit("invalid githubRepository: %v\n", ghContext.Repository)
 	}
 	owner, repo := slugs[0], slugs[1]
 
@@ -83,37 +102,21 @@ func main() {
 	ctx := context.Background()
 
 	if needUpdateComment {
-		commentID, err := strconv.ParseInt(githubCommentID, 10, 64)
-		if err != nil {
-			exit("unable to convert string to int in issue number: %v\n", err)
-		}
-		if err := githubClient.UpdateIssueComment(ctx, owner, repo, int(commentID), comment); err != nil {
+		if err := githubClient.UpdateIssueComment(ctx, owner, repo, ghContext.Event.Comment.ID, comment); err != nil {
 			exit("unable to update issue comment: %v\n", err)
 		}
 		return
 	}
 
 	if needCreateComment {
-		number, err := strconv.Atoi(githubIssueNumber)
-		if err != nil {
-			exit("unable to convert string to int in issue number: %v\n", err)
-		}
-		if err := githubClient.CreateIssueComment(ctx, owner, repo, number, comment); err != nil {
+		if err := githubClient.CreateIssueComment(ctx, owner, repo, ghContext.Event.Issue.Number, comment); err != nil {
 			exit("unable to create issue comment: %v\n", err)
 		}
 		return
 	}
 
 	if needUpdateReview {
-		number, err := strconv.Atoi(githubPullRequestNumber)
-		if err != nil {
-			exit("unable to convert string to int in issue number: %v\n", err)
-		}
-		reviewID, err := strconv.Atoi(githubReviewID)
-		if err != nil {
-			exit("unable to convert string to int in review id: %v\n", err)
-		}
-		if err := githubClient.UpdateReview(ctx, owner, repo, number, reviewID, comment); err != nil {
+		if err := githubClient.UpdateReview(ctx, owner, repo, ghContext.Event.PullRequest.Number, ghContext.Event.Review.ID, comment); err != nil {
 			exit("unable to update review: %v\n", err)
 		}
 		return
@@ -123,6 +126,14 @@ func main() {
 func exit(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, a...)
 	os.Exit(1)
+}
+
+func parseGitHubContext(s string) (*GitHubContext, error) {
+	gc := &GitHubContext{}
+	if err := json.Unmarshal([]byte(s), gc); err != nil {
+		return nil, err
+	}
+	return gc, nil
 }
 
 // trigger is expected as JSON array like '["a", "b"]'.
