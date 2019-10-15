@@ -41,7 +41,7 @@ jobs:
           GITHUB_REVIEW_BODY: ${{ github.event.review.body }}
           GITHUB_REVIEW_ID: ${{ github.event.review.id }}
         with:
-          trigger: 'looks good to me' # default: 'lgtm'
+          trigger: '[".*looks good to me.*"]' # default: '["^(lgtm|LGTM)$", "^[gG]ood [jJ]ob!?$"]'
           override: true # default: false
 ```
 
