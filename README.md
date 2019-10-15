@@ -34,9 +34,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIPHY_API_KEY: ${{ secrets.GIPHY_API_KEY }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_COMMENT_BODY: ${{ github.event.comment.body }}
-          GITHUB_COMMENT_ID: ${{ github.event.comment.id }} # not necessary if `override` is false
           GITHUB_ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_COMMENT_BODY: ${{ github.event.comment.body }}
+          GITHUB_COMMENT_ID: ${{ github.event.comment.id }}
+          GITHUB_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           GITHUB_REVIEW_BODY: ${{ github.event.review.body }}
           GITHUB_REVIEW_ID: ${{ github.event.review.id }}
         with:
