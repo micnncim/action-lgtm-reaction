@@ -13,7 +13,7 @@ Currently supports [GIPHY](https://giphy.com).
 
 ### Create Workflow
 
-`jobs.<job_id>.steps.with.trigger` should be an JSON string array of regexp.
+`jobs.<job_id>.steps.with.trigger` should be a JSON string array of regexp.
 
 ```yaml
 name: Send LGTM reaction
@@ -31,13 +31,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIPHY_API_KEY: ${{ secrets.GIPHY_API_KEY }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_ISSUE_NUMBER: ${{ github.event.issue.number }}
-          GITHUB_COMMENT_BODY: ${{ github.event.comment.body }}
-          GITHUB_COMMENT_ID: ${{ github.event.comment.id }}
-          GITHUB_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
-          GITHUB_REVIEW_BODY: ${{ github.event.review.body }}
-          GITHUB_REVIEW_ID: ${{ github.event.review.id }}
+          GITHUB: ${{ github }}
         with:
           trigger: '[".*looks good to me.*"]' # default: '["^(lgtm|LGTM)$", "^[gG]ood [jJ]ob!?$"]'
           override: true # default: false
