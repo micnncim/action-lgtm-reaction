@@ -14,16 +14,17 @@ import (
 )
 
 var (
-	githubToken       = os.Getenv("GITHUB_TOKEN")
-	giphyAPIKey       = os.Getenv("GIPHY_API_KEY")
-	githubRepository  = os.Getenv("GITHUB_REPOSITORY")
-	githubCommentBody = os.Getenv("GITHUB_COMMENT_BODY")
-	githubCommentID   = os.Getenv("GITHUB_COMMENT_ID")
-	githubIssueNumber = os.Getenv("GITHUB_ISSUE_NUMBER")
-	githubReviewBody  = os.Getenv("GITHUB_REVIEW_BODY")
-	githubReviewID    = os.Getenv("GITHUB_REVIEW_ID")
-	trigger           = os.Getenv("INPUT_TRIGGER")
-	override          = os.Getenv("INPUT_OVERRIDE")
+	githubToken             = os.Getenv("GITHUB_TOKEN")
+	giphyAPIKey             = os.Getenv("GIPHY_API_KEY")
+	githubRepository        = os.Getenv("GITHUB_REPOSITORY")
+	githubIssueNumber       = os.Getenv("GITHUB_ISSUE_NUMBER")
+	githubCommentBody       = os.Getenv("GITHUB_COMMENT_BODY")
+	githubCommentID         = os.Getenv("GITHUB_COMMENT_ID")
+	githubPullRequestNumber = os.Getenv("GITHUB_PULL_REQUEST_NUMBER")
+	githubReviewBody        = os.Getenv("GITHUB_REVIEW_BODY")
+	githubReviewID          = os.Getenv("GITHUB_REVIEW_ID")
+	trigger                 = os.Getenv("INPUT_TRIGGER")
+	override                = os.Getenv("INPUT_OVERRIDE")
 )
 
 func main() {
@@ -84,12 +85,11 @@ func main() {
 		return
 	}
 
-	number, err := strconv.Atoi(githubIssueNumber)
-	if err != nil {
-		exit("unable to convert string to int in issue number: %v\n", err)
-	}
-
 	if needCreateComment {
+		number, err := strconv.Atoi(githubIssueNumber)
+		if err != nil {
+			exit("unable to convert string to int in issue number: %v\n", err)
+		}
 		if err := githubClient.CreateIssueComment(ctx, owner, repo, number, comment); err != nil {
 			exit("unable to create issue comment: %v\n", err)
 		}
@@ -97,6 +97,10 @@ func main() {
 	}
 
 	if needUpdateReview {
+		number, err := strconv.Atoi(githubPullRequestNumber)
+		if err != nil {
+			exit("unable to convert string to int in issue number: %v\n", err)
+		}
 		reviewID, err := strconv.Atoi(githubReviewID)
 		if err != nil {
 			exit("unable to convert string to int in review id: %v\n", err)
