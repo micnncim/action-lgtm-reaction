@@ -3,7 +3,7 @@ package github
 import (
 	"context"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v28/github"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 
@@ -62,6 +62,23 @@ func (c *Client) UpdateIssueComment(ctx context.Context, owner, repo string, com
 	})
 	if err != nil {
 		log.Error("unable to update issue comment", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (c *Client) UpdateReview(ctx context.Context, owner, repo string, number, reviewID int, body string) error {
+	log := c.log.With(
+		zap.String("owner", owner),
+		zap.String("repo", repo),
+		zap.Int("number", number),
+		zap.Int("reviewID", reviewID),
+		zap.String("body", body),
+	)
+
+	_, _, err := c.githubClient.PullRequests.UpdateReview(ctx, owner, repo, number, int64(reviewID), body)
+	if err != nil {
+		log.Error("unable to update review", zap.Error(err))
 		return err
 	}
 	return nil

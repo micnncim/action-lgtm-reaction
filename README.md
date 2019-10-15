@@ -22,6 +22,8 @@ name: Send LGTM reaction
 on:
   issue_comment:
     types: [created]
+  pull_request_review:
+    types: [submitted]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,6 +37,8 @@ jobs:
           GITHUB_COMMENT_BODY: ${{ github.event.comment.body }}
           GITHUB_COMMENT_ID: ${{ github.event.comment.id }} # not necessary if `override` is false
           GITHUB_ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_REVIEW_BODY: ${{ github.event.review.body }}
+          GITHUB_REVIEW_ID: ${{ github.event.review.id }}
         with:
           trigger: 'looks good to me' # default: 'lgtm'
           override: true # default: false

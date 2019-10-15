@@ -20,13 +20,27 @@ var (
 	githubCommentBody = os.Getenv("GITHUB_COMMENT_BODY")
 	githubCommentID   = os.Getenv("GITHUB_COMMENT_ID")
 	githubIssueNumber = os.Getenv("GITHUB_ISSUE_NUMBER")
+	githubReviewBody  = os.Getenv("GITHUB_REVIEW_BODY")
+	githubReviewID    = os.Getenv("GITHUB_REVIEW_ID")
 	trigger           = os.Getenv("INPUT_TRIGGER")
 	override          = os.Getenv("INPUT_OVERRIDE")
 )
 
 func main() {
-	if strings.ToUpper(trigger) != strings.ToUpper(githubCommentBody) {
-		fmt.Fprintf(os.Stderr, "no match issue comment\n")
+	needOverride, err := strconv.ParseBool(override)
+	if err != nil {
+		exit("unable to parse string to bool in override flag: %v\n", err)
+	}
+
+	matchComment := strings.ToUpper(trigger) == strings.ToUpper(githubCommentBody)
+	matchReview := strings.ToUpper(trigger) == strings.ToUpper(githubReviewBody)
+
+	needCreateComment := (matchComment || matchReview) && !needOverride
+	needUpdateComment := matchComment && needOverride
+	needUpdateReview := matchReview && needOverride
+
+	if !needCreateComment && !needUpdateComment && !needUpdateReview {
+		fmt.Fprintf(os.Stderr, "no need to do action\n")
 		return
 	}
 
@@ -57,14 +71,9 @@ func main() {
 	index := rand.Intn(len(giphies))
 	comment := giphies[index].GIFURLInMarkdownStyle()
 
-	needUpdate, err := strconv.ParseBool(override)
-	if err != nil {
-		exit("unable to parse string to bool in override flag: %v\n", err)
-	}
-
 	ctx := context.Background()
 
-	if needUpdate {
+	if needUpdateComment {
 		commentID, err := strconv.ParseInt(githubCommentID, 10, 64)
 		if err != nil {
 			exit("unable to convert string to int in issue number: %v\n", err)
@@ -79,8 +88,23 @@ func main() {
 	if err != nil {
 		exit("unable to convert string to int in issue number: %v\n", err)
 	}
-	if err := githubClient.CreateIssueComment(ctx, owner, repo, number, comment); err != nil {
-		os.Exit(1)
+
+	if needCreateComment {
+		if err := githubClient.CreateIssueComment(ctx, owner, repo, number, comment); err != nil {
+			exit("unable to create issue comment: %v\n", err)
+		}
+		return
+	}
+
+	if needUpdateReview {
+		reviewID, err := strconv.Atoi(githubReviewID)
+		if err != nil {
+			exit("unable to convert string to int in review id: %v\n", err)
+		}
+		if err := githubClient.UpdateReview(ctx, owner, repo, number, reviewID, comment); err != nil {
+			exit("unable to update review: %v\n", err)
+		}
+		return
 	}
 }
 
