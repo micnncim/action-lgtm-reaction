@@ -6,6 +6,10 @@ inputs:
     description: 'Trigger comment on issue to send reaction'
     required: false
     default: 'lgtm'
+  overide:
+    description: 'Whether the original comment is overrode'
+    required: false
+    default: false
 runs:
   using: 'docker'
   image: 'Dockerfile'
