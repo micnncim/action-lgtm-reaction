@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -33,8 +35,14 @@ func main() {
 		exit("unable to parse string to bool in override flag: %v\n", err)
 	}
 
-	matchComment := strings.ToUpper(trigger) == strings.ToUpper(githubCommentBody)
-	matchReview := strings.ToUpper(trigger) == strings.ToUpper(githubReviewBody)
+	matchComment, err := matchTrigger(trigger, githubCommentBody)
+	if err != nil {
+		exit("invalid trigger: %v\n", err)
+	}
+	matchReview, err := matchTrigger(trigger, githubReviewBody)
+	if err != nil {
+		exit("invalid trigger: %v\n", err)
+	}
 
 	needCreateComment := (matchComment || matchReview) && !needOverride
 	needUpdateComment := matchComment && needOverride
@@ -115,4 +123,27 @@ func main() {
 func exit(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, a...)
 	os.Exit(1)
+}
+
+// trigger is expected as JSON array like '["a", "b"]'.
+func parseTrigger(trigger string) ([]string, error) {
+	var a []string
+	if err := json.Unmarshal([]byte(trigger), &a); err != nil {
+		return nil, err
+	}
+	return a, nil
+}
+
+func matchTrigger(trigger, target string) (bool, error) {
+	regexps, err := parseTrigger(trigger)
+	if err != nil {
+		return false, err
+	}
+	for _, s := range regexps {
+		r := regexp.MustCompile(s)
+		if r.MatchString(target) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
