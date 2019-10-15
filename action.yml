@@ -7,7 +7,7 @@ inputs:
     required: false
     default: 'lgtm'
   overide:
-    description: 'Whether the original comment is overrode'
+    description: 'Whether the original comment is overridden'
     required: false
     default: false
 runs:
