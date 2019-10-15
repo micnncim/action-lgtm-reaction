@@ -43,7 +43,25 @@ func (c *Client) CreateIssueComment(ctx context.Context, owner, repo string, num
 		Body: pointer.String(body),
 	})
 	if err != nil {
-		log.Error("unable to create issue", zap.Error(err))
+		log.Error("unable to create issue comment", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (c *Client) UpdateIssueComment(ctx context.Context, owner, repo string, commentID int, body string) error {
+	log := c.log.With(
+		zap.String("owner", owner),
+		zap.String("repo", repo),
+		zap.Int("commentID", commentID),
+		zap.String("body", body),
+	)
+
+	_, _, err := c.githubClient.Issues.EditComment(ctx, owner, repo, int64(commentID), &github.IssueComment{
+		Body: pointer.String(body),
+	})
+	if err != nil {
+		log.Error("unable to update issue comment", zap.Error(err))
 		return err
 	}
 	return nil
