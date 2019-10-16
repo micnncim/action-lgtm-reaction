@@ -7,13 +7,38 @@
 ![](docs/assets/screen-record.gif)
 
 Send LGTM reaction as image or GIF when we say `lgtm`.  
-Currently supports [GIPHY](https://giphy.com).
+
+Currently supports [LGTM.app](https://www.lgtm.app/) and [GIPHY](https://giphy.com).
 
 ## Usage
 
 ### Create Workflow
 
+#### `jobs.<job_id>.steps.env`
+
+|             Key              |                   Value                   |                         Required                          |
+| ---------------------------- | ----------------------------------------- | --------------------------------------------------------- |
+| `GITHUB_TOKEN`               | `${{ secrets.GITHUB_TOKEN }}`             | `true`                                                    |
+| `GIPHY_API_KEY`              | `${{ secrets.GIPHY_API_KEY }}`            | `true` if `jobs.<job_id>.steps.with.source` == `giphy`    |
+| `GITHUB_REPOSITORY`          | `${{ github.repository }}`                | `true`                                                    |
+| `GITHUB_ISSUE_NUMBER`        | `${{ github.event.issue.number }}`        | `true` if `on.issue_comment.types` == `[created]`         |
+| `GITHUB_COMMENT_BODY`        | `${{ github.event.comment.body }}`        | `true` if `on.issue_comment.types` == `[created]`         |
+| `GITHUB_COMMENT_ID`          | `${{ github.event.comment.id }}`          | `true` if `on.issue_comment.types` == `[created]`         |
+| `GITHUB_PULL_REQUEST_NUMBER` | `${{ github.event.pull_request.number }}` | `true` if `on.pull_request_review.types` == `[submitted]` |
+| `GITHUB_REVIEW_BODY`         | `${{ github.event.review.body }}`         | `true` if `on.pull_request_review.types` == `[submitted]` |
+| `GITHUB_REVIEW_ID`           | `${{ github.event.review.id }}`           | `true` if `on.pull_request_review.types` == `[submitted]` |
+
+#### `jobs.<job_id>.steps.with`
+
+|    Key     |                   Default                   | Required |         Note         |
+| ---------- | ------------------------------------------- | -------- | -------------------- |
+| `trigger`  | `'["^(lgtm|LGTM)$", "^[gG]ood [jJ]ob!?$"]'` | `false`  |                      |
+| `override` | `false`                                     | `false`  |                      |
+| `source`   | `lgtmapp`                                   | `false`  | `lgtmapp` or `giphy` |
+
 `jobs.<job_id>.steps.with.trigger` should be an JSON string array of regexp.
+
+#### Example
 
 ```yaml
 name: Send LGTM reaction
@@ -39,9 +64,9 @@ jobs:
           GITHUB_REVIEW_BODY: ${{ github.event.review.body }}
           GITHUB_REVIEW_ID: ${{ github.event.review.id }}
         with:
-          trigger: '[".*looks good to me.*"]' # default: '["^(lgtm|LGTM)$", "^[gG]ood [jJ]ob!?$"]'
-          override: true # default: false
-          source: giphy # default: 'lgtmapp'
+          trigger: '[".*looks good to me.*"]'
+          override: true
+          source: 'giphy'
 ```
 
 ## Projects using this action
