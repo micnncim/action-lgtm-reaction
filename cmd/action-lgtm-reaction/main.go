@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/micnncim/action-lgtm-reaction/pkg/giphy"
 	"github.com/micnncim/action-lgtm-reaction/pkg/github"
+	"github.com/micnncim/action-lgtm-reaction/pkg/lgtm"
+	"github.com/micnncim/action-lgtm-reaction/pkg/lgtm/giphy"
+	"github.com/micnncim/action-lgtm-reaction/pkg/lgtm/lgtmapp"
 )
 
 var (
@@ -27,9 +27,27 @@ var (
 	githubReviewID          = os.Getenv("GITHUB_REVIEW_ID")
 	trigger                 = os.Getenv("INPUT_TRIGGER")
 	override                = os.Getenv("INPUT_OVERRIDE")
+	source                  = os.Getenv("INPUT_SOURCE")
 )
 
 func main() {
+	var lgtmClient lgtm.Client
+	var err error
+	switch source {
+	case lgtm.SourceGiphy.String():
+		lgtmClient, err = giphy.NewClient(giphyAPIKey)
+		if err != nil {
+			exit("unable to create giphy client: %v\n", err)
+		}
+	case lgtm.SourceLGTMApp.String():
+		lgtmClient, err = lgtmapp.NewClient()
+		if err != nil {
+			exit("unable to create lgtmapp client: %v\n", err)
+		}
+	default:
+		exit("not support source\n")
+	}
+
 	needOverride, err := strconv.ParseBool(override)
 	if err != nil {
 		exit("unable to parse string to bool in override flag: %v\n", err)
@@ -53,18 +71,6 @@ func main() {
 		return
 	}
 
-	giphyClient, err := giphy.NewClient(giphyAPIKey)
-	if err != nil {
-		exit("unable to create giphy client: %v\n", err)
-	}
-	giphies, err := giphyClient.Search("lgtm")
-	if err != nil {
-		exit("unable to search giphy :%v\n", err)
-	}
-	if len(giphies) == 0 {
-		exit("no giphy contents found\n")
-	}
-
 	githubClient, err := github.NewClient(githubToken)
 	if err != nil {
 		exit("unable to create github client: %v\n", err)
@@ -76,9 +82,10 @@ func main() {
 	}
 	owner, repo := slugs[0], slugs[1]
 
-	rand.Seed(time.Now().Unix())
-	index := rand.Intn(len(giphies))
-	comment := giphies[index].GIFURLInMarkdownStyle()
+	comment, err := lgtmClient.GetRandom()
+	if err != nil {
+		exit("unable to get random lgtm url: %v\n", err)
+	}
 
 	ctx := context.Background()
 
