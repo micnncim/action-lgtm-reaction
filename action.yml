@@ -5,7 +5,7 @@ inputs:
   trigger:
     description: 'Trigger comment on issue to send reaction'
     required: false
-    default: '["^(lgtm|LGTM)$", "^[gG]ood [jJ]ob!?$"]'
+    default: '["^lgtm$", "^[gG]ood [jJ]ob!?$"]'
   overide:
     description: 'Whether the original comment is overridden'
     required: false
