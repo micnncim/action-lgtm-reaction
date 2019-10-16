@@ -30,11 +30,11 @@ Currently supports [LGTM.app](https://www.lgtm.app/) and [GIPHY](https://giphy.c
 
 #### `jobs.<job_id>.steps.with`
 
-|    Key     |                   Default                   | Required |         Note         |
-| ---------- | ------------------------------------------- | -------- | -------------------- |
-| `trigger`  | `'["^(lgtm|LGTM)$", "^[gG]ood [jJ]ob!?$"]'` | `false`  |                      |
-| `override` | `false`                                     | `false`  |                      |
-| `source`   | `lgtmapp`                                   | `false`  | `lgtmapp` or `giphy` |
+|    Key     |               Default                | Required |         Note         |
+| ---------- | ------------------------------------ | -------- | -------------------- |
+| `trigger`  | `'["^lgtm$", "^[gG]ood [jJ]ob!?$"]'` | `false`  |                      |
+| `override` | `false`                              | `false`  |                      |
+| `source`   | `lgtmapp`                            | `false`  | `lgtmapp` or `giphy` |
 
 `jobs.<job_id>.steps.with.trigger` should be an JSON string array of regexp.
 
