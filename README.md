@@ -36,7 +36,7 @@ Currently supports [LGTM.app](https://www.lgtm.app/) and [GIPHY](https://giphy.c
 | `override` | `false`                              | `false`  |                      |
 | `source`   | `lgtmapp`                            | `false`  | `lgtmapp` or `giphy` |
 
-`jobs.<job_id>.steps.with.trigger` should be an JSON string array of regexp.
+`jobs.<job_id>.steps.with.trigger` should be a JSON string array of regexp.
 
 #### Example
 
