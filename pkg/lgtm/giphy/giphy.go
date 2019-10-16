@@ -2,11 +2,15 @@ package giphy
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
 
 	"go.uber.org/zap"
+
+	"github.com/micnncim/action-lgtm-reaction/pkg/lgtm"
 )
 
 const gifURLFormat = "https://media.giphy.com/media/%s/giphy.gif"
@@ -20,27 +24,24 @@ type Giphy struct {
 	Title string `json:"title"`
 }
 
-func (g *Giphy) GIFURLInMarkdownStyle() string {
-	gifURL := fmt.Sprintf(gifURLFormat, g.ID)
-	return fmt.Sprintf("![](%s)", gifURL)
-}
-
 type Payload struct {
 	Data []*Giphy `json:"data"`
 }
 
-type Client struct {
+type client struct {
 	httpClient *http.Client
 	apiKey     string
 	log        *zap.Logger
 }
 
-func NewClient(apiKey string) (*Client, error) {
+var _ lgtm.Client = (*client)(nil)
+
+func NewClient(apiKey string) (*client, error) {
 	log, err := zap.NewDevelopment()
 	if err != nil {
 		return nil, err
 	}
-	return &Client{
+	return &client{
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -49,7 +50,21 @@ func NewClient(apiKey string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) Search(q string) ([]*Giphy, error) {
+func (c *client) GetRandom() (string, error) {
+	giphies, err := c.search("lgtm")
+	if err != nil {
+		return "", nil
+	}
+	if len(giphies) == 0 {
+		return "", errors.New("no giphy")
+	}
+	rand.Seed(time.Now().Unix())
+	index := rand.Intn(len(giphies))
+	gifURL := fmt.Sprintf(gifURLFormat, giphies[index])
+	return lgtm.MarkdownStyle(gifURL), nil
+}
+
+func (c *client) search(q string) ([]*Giphy, error) {
 	log := c.log.With(zap.String("q", q))
 
 	apiURL := fmt.Sprintf(apiBaseURLFormat, "gifs/search")

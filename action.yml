@@ -10,6 +10,10 @@ inputs:
     description: 'Whether the original comment is overridden'
     required: false
     default: false
+  source:
+    description: 'Source providing LGTM image'
+    required: false
+    default: lgtmapp
 runs:
   using: 'docker'
   image: 'Dockerfile'
