@@ -43,6 +43,10 @@ jobs:
           override: true # default: false
 ```
 
+## Projects using this action
+
+- [Cake Website](https://github.com/cake-build/website)
+
 ## License
 
 [MIT License](LICENSE)
