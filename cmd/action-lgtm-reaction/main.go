@@ -101,9 +101,21 @@ func main() {
 	}
 
 	if needCreateComment {
-		number, err := strconv.Atoi(githubIssueNumber)
-		if err != nil {
-			exit("unable to convert string to int in issue number: %v\n", err)
+		if githubIssueNumber == "" && githubPullRequestNumber == "" {
+			exit("no issue number and pull request number\n")
+		}
+		var number int
+		var err error
+		if githubIssueNumber != "" {
+			number, err = strconv.Atoi(githubIssueNumber)
+			if err != nil {
+				exit("unable to convert string to int in issue number: %v\n", err)
+			}
+		} else if githubPullRequestNumber != "" {
+			number, err = strconv.Atoi(githubPullRequestNumber)
+			if err != nil {
+				exit("unable to convert string to int in pull request number: %v\n", err)
+			}
 		}
 		if err := githubClient.CreateIssueComment(ctx, owner, repo, number, comment); err != nil {
 			exit("unable to create issue comment: %v\n", err)
