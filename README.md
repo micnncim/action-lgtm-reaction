@@ -41,6 +41,7 @@ jobs:
         with:
           trigger: '[".*looks good to me.*"]' # default: '["^(lgtm|LGTM)$", "^[gG]ood [jJ]ob!?$"]'
           override: true # default: false
+          source: giphy # default: 'lgtmapp'
 ```
 
 ## License
