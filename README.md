@@ -1,4 +1,4 @@
-# LGTM Reaction
+![logo](docs/assets/logo.png)
 
 [![CI](https://github.com/micnncim/action-lgtm-reaction/workflows/CI/badge.svg)](https://github.com/micnncim/action-lgtm-reaction/actions)
 [![Release](https://img.shields.io/github/v/release/micnncim/action-lgtm-reaction.svg?logo=github)](https://github.com/micnncim/action-lgtm-reaction/releases)
