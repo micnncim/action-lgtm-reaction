@@ -9,11 +9,11 @@ inputs:
   overide:
     description: 'Whether the original comment is overridden'
     required: false
-    default: false
+    default: 'false'
   source:
     description: 'Source providing LGTM image'
     required: false
-    default: lgtmapp
+    default: 'lgtmapp'
 runs:
   using: 'docker'
   image: 'Dockerfile'
