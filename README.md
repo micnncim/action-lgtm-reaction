@@ -8,7 +8,7 @@
 
 Send LGTM reaction as image or GIF when we say `lgtm`.  
 
-Currently supports [LGTM.app](https://www.lgtm.app/) and [GIPHY](https://giphy.com).
+Currently supports [LGTM.app](https://www.lgtm.app) and [GIPHY](https://giphy.com).
 
 ## Usage
 
@@ -30,6 +30,27 @@ Currently supports [LGTM.app](https://www.lgtm.app/) and [GIPHY](https://giphy.c
 | `source`   | `lgtmapp`                            | `false`  | `lgtmapp` or `giphy`                                          |
 
 #### Example
+
+For minimalists:
+
+```yaml
+name: Send LGTM reaction
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@1.0.0
+      - uses: micnncim/action-lgtm-reaction@
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+For nerds:
 
 ```yaml
 name: Send LGTM reaction
@@ -53,9 +74,13 @@ jobs:
           source: 'giphy'
 ```
 
-## Projects using this action
+## Projects using `action-lgtm-reaction`
 
 - [Cake Website](https://github.com/cake-build/website)
+
+## Note
+
+*Icon made by Freepik from [www.flaticon.com](https://www.flaticon.com)*
 
 ## License
 
