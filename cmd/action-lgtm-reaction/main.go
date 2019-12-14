@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -16,132 +17,167 @@ import (
 )
 
 var (
-	githubToken             = os.Getenv("GITHUB_TOKEN")
-	giphyAPIKey             = os.Getenv("GIPHY_API_KEY")
-	githubRepository        = os.Getenv("GITHUB_REPOSITORY")
-	githubIssueNumber       = os.Getenv("GITHUB_ISSUE_NUMBER")
-	githubCommentBody       = os.Getenv("GITHUB_COMMENT_BODY")
-	githubCommentID         = os.Getenv("GITHUB_COMMENT_ID")
-	githubPullRequestNumber = os.Getenv("GITHUB_PULL_REQUEST_NUMBER")
-	githubReviewBody        = os.Getenv("GITHUB_REVIEW_BODY")
-	githubReviewID          = os.Getenv("GITHUB_REVIEW_ID")
-	trigger                 = os.Getenv("INPUT_TRIGGER")
-	override                = os.Getenv("INPUT_OVERRIDE")
-	source                  = os.Getenv("INPUT_SOURCE")
+	githubToken = os.Getenv("GITHUB_TOKEN")
+	giphyAPIKey = os.Getenv("GIPHY_API_KEY")
 )
 
+var (
+	trigger  = os.Getenv("INPUT_TRIGGER")
+	override = os.Getenv("INPUT_OVERRIDE")
+	source   = os.Getenv("INPUT_SOURCE")
+)
+
+type GitHubEvent struct {
+	Comment struct {
+		ID   int    `json:"id"`
+		Body string `json:"body"`
+	} `json:"comment"`
+	Issue struct {
+		Number int `json:"number"`
+	} `json:"issue"`
+	PullRequest struct {
+		Number int `json:"number"`
+	} `json:"pull_request"`
+	Review struct {
+		ID   int    `json:"id"`
+		Body string `json:"body"`
+	} `json:"review"`
+}
+
 func main() {
-	var lgtmClient lgtm.Client
-	var err error
-	switch source {
-	case lgtm.SourceGiphy.String():
-		lgtmClient, err = giphy.NewClient(giphyAPIKey)
-		if err != nil {
-			exit("unable to create giphy client: %v\n", err)
-		}
-	case lgtm.SourceLGTMApp.String():
-		lgtmClient, err = lgtmapp.NewClient()
-		if err != nil {
-			exit("unable to create lgtmapp client: %v\n", err)
-		}
-	default:
-		exit("not support source\n")
+	if err := run(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
+}
 
-	needOverride, err := strconv.ParseBool(override)
+func run() error {
+	e, err := getGitHubEvent()
 	if err != nil {
-		exit("unable to parse string to bool in override flag: %v\n", err)
+		return err
 	}
 
-	matchComment, err := matchTrigger(trigger, githubCommentBody)
+	needCreateComment, needUpdateComment, needUpdateReview, err := checkActionNeeded(e)
 	if err != nil {
-		exit("invalid trigger: %v\n", err)
+		return err
 	}
-	matchReview, err := matchTrigger(trigger, githubReviewBody)
-	if err != nil {
-		exit("invalid trigger: %v\n", err)
-	}
-
-	needCreateComment := (matchComment || matchReview) && !needOverride
-	needUpdateComment := matchComment && needOverride
-	needUpdateReview := matchReview && needOverride
-
 	if !needCreateComment && !needUpdateComment && !needUpdateReview {
-		fmt.Fprintf(os.Stderr, "no need to do action\n")
-		return
+		fmt.Fprintf(os.Stderr, "no need to do any action\n")
+		return nil
 	}
 
-	githubClient, err := github.NewClient(githubToken)
+	owner, repo, err := getGitHubRepo()
 	if err != nil {
-		exit("unable to create github client: %v\n", err)
+		return err
 	}
 
-	slugs := strings.Split(githubRepository, "/")
-	if len(slugs) != 2 {
-		exit("invalid githubRepository: %v\n", githubRepository)
-	}
-	owner, repo := slugs[0], slugs[1]
-
-	comment, err := lgtmClient.GetRandom()
+	lc, err := createLGTMClient()
 	if err != nil {
-		exit("unable to get random lgtm url: %v\n", err)
+		return err
+	}
+	lgtmComment, err := lc.GetRandom()
+	if err != nil {
+		return err
 	}
 
 	ctx := context.Background()
 
-	if needUpdateComment {
-		commentID, err := strconv.ParseInt(githubCommentID, 10, 64)
-		if err != nil {
-			exit("unable to convert string to int in issue number: %v\n", err)
-		}
-		if err := githubClient.UpdateIssueComment(ctx, owner, repo, int(commentID), comment); err != nil {
-			exit("unable to update issue comment: %v\n", err)
-		}
-		return
+	gc, err := github.NewClient(githubToken)
+	if err != nil {
+		return err
 	}
 
-	if needCreateComment {
-		if githubIssueNumber == "" && githubPullRequestNumber == "" {
-			exit("no issue number and pull request number\n")
+	switch {
+	case needUpdateComment:
+		if err := gc.UpdateIssueComment(ctx, owner, repo, e.Comment.ID, lgtmComment); err != nil {
+			return err
 		}
+		return nil
+
+	case needCreateComment:
 		var number int
-		var err error
-		if githubIssueNumber != "" {
-			number, err = strconv.Atoi(githubIssueNumber)
-			if err != nil {
-				exit("unable to convert string to int in issue number: %v\n", err)
-			}
-		} else if githubPullRequestNumber != "" {
-			number, err = strconv.Atoi(githubPullRequestNumber)
-			if err != nil {
-				exit("unable to convert string to int in pull request number: %v\n", err)
-			}
+		switch {
+		case e.Issue.Number != 0:
+			number = e.Issue.Number
+		case e.PullRequest.Number != 0:
+			number = e.PullRequest.Number
+		default:
+			return errors.New("issue number or pull request number don't exist")
 		}
-		if err := githubClient.CreateIssueComment(ctx, owner, repo, number, comment); err != nil {
-			exit("unable to create issue comment: %v\n", err)
+		if err := gc.CreateIssueComment(ctx, owner, repo, number, lgtmComment); err != nil {
+			return err
 		}
-		return
+		return nil
+
+	case needUpdateReview:
+		if err := gc.UpdateReview(ctx, owner, repo, e.PullRequest.Number, e.Review.ID, lgtmComment); err != nil {
+			return err
+		}
+		return nil
 	}
 
-	if needUpdateReview {
-		number, err := strconv.Atoi(githubPullRequestNumber)
-		if err != nil {
-			exit("unable to convert string to int in issue number: %v\n", err)
-		}
-		reviewID, err := strconv.Atoi(githubReviewID)
-		if err != nil {
-			exit("unable to convert string to int in review id: %v\n", err)
-		}
-		if err := githubClient.UpdateReview(ctx, owner, repo, number, reviewID, comment); err != nil {
-			exit("unable to update review: %v\n", err)
-		}
+	return nil
+}
+
+func createLGTMClient() (c lgtm.Client, err error) {
+	switch source {
+	case lgtm.SourceGiphy.String():
+		c, err = giphy.NewClient(giphyAPIKey)
+		return
+	case lgtm.SourceLGTMApp.String():
+		c, err = lgtmapp.NewClient()
+		return
+	default:
+		err = errors.New("not support source")
 		return
 	}
 }
 
-func exit(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, a...)
-	os.Exit(1)
+func checkActionNeeded(e *GitHubEvent) (needCreateComment, needUpdateComment, needUpdateReview bool, err error) {
+	needOverride, err := strconv.ParseBool(override)
+	if err != nil {
+		return
+	}
+
+	matchComment, err := matchTrigger(trigger, e.Comment.Body)
+	if err != nil {
+		return
+	}
+	matchReview, err := matchTrigger(trigger, e.Review.Body)
+	if err != nil {
+		return
+	}
+
+	needCreateComment = (matchComment || matchReview) && !needOverride
+	needUpdateComment = matchComment && needOverride
+	needUpdateReview = matchReview && needOverride
+
+	return
+}
+
+func getGitHubEvent() (*GitHubEvent, error) {
+	p := os.Getenv("GITHUB_EVENT_PATH")
+	f, err := os.Open(p)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	var e *GitHubEvent
+	if err := json.NewDecoder(f).Decode(e); err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+func getGitHubRepo() (owner, repo string, err error) {
+	r := os.Getenv("GITHUB_REPOSITORY")
+	s := strings.Split(r, "/")
+	if len(s) != 2 {
+		err = fmt.Errorf("invalid githubRepository: %v\n", r)
+		return
+	}
+	owner, repo = s[0], s[1]
+	return
 }
 
 // trigger is expected as JSON array like '["a", "b"]'.
