@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
+	"github.com/micnncim/action-lgtm-reaction/pkg/actions"
 	"github.com/micnncim/action-lgtm-reaction/pkg/github"
 	"github.com/micnncim/action-lgtm-reaction/pkg/lgtm"
 	"github.com/micnncim/action-lgtm-reaction/pkg/lgtm/giphy"
@@ -19,12 +19,6 @@ import (
 var (
 	githubToken = os.Getenv("GITHUB_TOKEN")
 	giphyAPIKey = os.Getenv("GIPHY_API_KEY")
-)
-
-var (
-	trigger  = os.Getenv("INPUT_TRIGGER")
-	override = os.Getenv("INPUT_OVERRIDE")
-	source   = os.Getenv("INPUT_SOURCE")
 )
 
 type GitHubEvent struct {
@@ -42,6 +36,14 @@ type GitHubEvent struct {
 		ID   int    `json:"id"`
 		Body string `json:"body"`
 	} `json:"review"`
+}
+
+var (
+	input actions.Input
+)
+
+func init() {
+	input = actions.GetInput()
 }
 
 func main() {
@@ -71,7 +73,7 @@ func run() error {
 		return err
 	}
 
-	lc, err := createLGTMClient()
+	lc, err := createLGTMClient(input.Source)
 	if err != nil {
 		return err
 	}
@@ -119,7 +121,7 @@ func run() error {
 	return nil
 }
 
-func createLGTMClient() (c lgtm.Client, err error) {
+func createLGTMClient(source string) (c lgtm.Client, err error) {
 	switch source {
 	case lgtm.SourceGiphy.String():
 		c, err = giphy.NewClient(giphyAPIKey)
@@ -134,10 +136,10 @@ func createLGTMClient() (c lgtm.Client, err error) {
 }
 
 func checkActionNeeded(e *GitHubEvent) (needCreateComment, needUpdateComment, needUpdateReview bool, err error) {
-	needOverride, err := strconv.ParseBool(override)
-	if err != nil {
-		return
-	}
+	var (
+		trigger  = input.Trigger
+		override = input.Override
+	)
 
 	matchComment, err := matchTrigger(trigger, e.Comment.Body)
 	if err != nil {
@@ -148,9 +150,9 @@ func checkActionNeeded(e *GitHubEvent) (needCreateComment, needUpdateComment, ne
 		return
 	}
 
-	needCreateComment = (matchComment || matchReview) && !needOverride
-	needUpdateComment = matchComment && needOverride
-	needUpdateReview = matchReview && needOverride
+	needCreateComment = (matchComment || matchReview) && !override
+	needUpdateComment = matchComment && override
+	needUpdateReview = matchReview && override
 
 	return
 }
