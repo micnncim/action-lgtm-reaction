@@ -162,11 +162,11 @@ func getGitHubEvent() (*GitHubEvent, error) {
 		return nil, err
 	}
 	defer f.Close()
-	var e *GitHubEvent
-	if err := json.NewDecoder(f).Decode(e); err != nil {
+	var e GitHubEvent
+	if err := json.NewDecoder(f).Decode(&e); err != nil {
 		return nil, err
 	}
-	return e, nil
+	return &e, nil
 }
 
 func getGitHubRepo() (owner, repo string, err error) {
