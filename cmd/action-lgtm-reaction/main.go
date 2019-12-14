@@ -91,10 +91,7 @@ func run() error {
 
 	switch {
 	case needUpdateComment:
-		if err := gc.UpdateIssueComment(ctx, owner, repo, e.Comment.ID, lgtmComment); err != nil {
-			return err
-		}
-		return nil
+		return gc.UpdateIssueComment(ctx, owner, repo, e.Comment.ID, lgtmComment)
 
 	case needCreateComment:
 		var number int
@@ -106,16 +103,10 @@ func run() error {
 		default:
 			return errors.New("issue number or pull request number don't exist")
 		}
-		if err := gc.CreateIssueComment(ctx, owner, repo, number, lgtmComment); err != nil {
-			return err
-		}
-		return nil
+		return gc.CreateIssueComment(ctx, owner, repo, number, lgtmComment)
 
 	case needUpdateReview:
-		if err := gc.UpdateReview(ctx, owner, repo, e.PullRequest.Number, e.Review.ID, lgtmComment); err != nil {
-			return err
-		}
-		return nil
+		return gc.UpdateReview(ctx, owner, repo, e.PullRequest.Number, e.Review.ID, lgtmComment)
 	}
 
 	return nil
@@ -130,7 +121,7 @@ func createLGTMClient(source string) (c lgtm.Client, err error) {
 		c, err = lgtmapp.NewClient()
 		return
 	default:
-		err = errors.New("not support source")
+		err = fmt.Errorf("not support source: %s", source)
 		return
 	}
 }
@@ -141,11 +132,15 @@ func checkActionNeeded(e *GitHubEvent) (needCreateComment, needUpdateComment, ne
 		override = input.Override
 	)
 
-	matchComment, err := matchTrigger(trigger, e.Comment.Body)
+	var (
+		matchComment bool
+		matchReview  bool
+	)
+	matchComment, err = matchTrigger(trigger, e.Comment.Body)
 	if err != nil {
 		return
 	}
-	matchReview, err := matchTrigger(trigger, e.Review.Body)
+	matchReview, err = matchTrigger(trigger, e.Review.Body)
 	if err != nil {
 		return
 	}
@@ -164,18 +159,18 @@ func getGitHubEvent() (*GitHubEvent, error) {
 		return nil, err
 	}
 	defer f.Close()
-	var e GitHubEvent
-	if err := json.NewDecoder(f).Decode(&e); err != nil {
+	e := &GitHubEvent{}
+	if err := json.NewDecoder(f).Decode(e); err != nil {
 		return nil, err
 	}
-	return &e, nil
+	return e, nil
 }
 
 func getGitHubRepo() (owner, repo string, err error) {
 	r := os.Getenv("GITHUB_REPOSITORY")
 	s := strings.Split(r, "/")
 	if len(s) != 2 {
-		err = fmt.Errorf("invalid githubRepository: %v\n", r)
+		err = fmt.Errorf("invalid github repository: %v\n", r)
 		return
 	}
 	owner, repo = s[0], s[1]
