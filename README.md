@@ -6,7 +6,7 @@
 
 ![](docs/assets/screen-record.gif)
 
-Send LGTM reaction as image or GIF when we say `lgtm`.  
+Send LGTM reaction as image when we say `lgtm`.  
 
 Currently supports [LGTM.app](https://www.lgtm.app) and [GIPHY](https://giphy.com).
 
