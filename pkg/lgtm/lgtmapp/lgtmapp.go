@@ -37,6 +37,14 @@ func NewClient() (*client, error) {
 }
 
 func (c *client) GetRandom() (string, error) {
+	imageURL, err := c.getRandomImageURL()
+	if err != nil {
+		return "", nil
+	}
+	return lgtm.MarkdownStyle(imageURL), nil
+}
+
+func (c *client) getRandomImageURL() (string, error) {
 	log := c.log
 
 	req, err := http.NewRequest(http.MethodGet, randomURL, nil)
@@ -50,9 +58,22 @@ func (c *client) GetRandom() (string, error) {
 		return "", nil
 	}
 
+	// strip image url from lgtm.app data url.
+	// e.g.) https://www.lgtm.app/i/4F5vFPNW3 -> https://www.lgtm.app/p/4F5vFPNW3
 	redirectedURL := resp.Request.URL.String()
-	slugs := strings.Split(redirectedURL, "/")
-	id := slugs[len(slugs)-1]
-	imageURL := fmt.Sprintf(imageURLFormat, id)
-	return lgtm.MarkdownStyle(imageURL), nil
+	s := strings.Split(redirectedURL, "/")
+	id := s[len(s)-1]
+	u := fmt.Sprintf(imageURLFormat, id)
+
+	req, err = http.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		log.Error("unable to create new http request", zap.Error(err))
+		return "", nil
+	}
+	resp, err = c.httpClient.Do(req)
+	if err != nil {
+		log.Error("unable to do http request", zap.Error(err))
+		return "", nil
+	}
+	return resp.Request.URL.String(), nil
 }
