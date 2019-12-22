@@ -60,7 +60,7 @@ func (c *client) GetRandom() (string, error) {
 	}
 	rand.Seed(time.Now().Unix())
 	index := rand.Intn(len(giphies))
-	gifURL := fmt.Sprintf(gifURLFormat, giphies[index])
+	gifURL := fmt.Sprintf(gifURLFormat, giphies[index].ID)
 	return lgtm.MarkdownStyle(gifURL), nil
 }
 
