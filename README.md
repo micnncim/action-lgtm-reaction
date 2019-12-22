@@ -63,8 +63,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@1.0.0
-      - uses: micnncim/action-lgtm-reaction@latest
+      - uses: actions/checkout@v2
+      - uses: micnncim/action-lgtm-reaction@master # Set some version.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIPHY_API_KEY: ${{ secrets.GIPHY_API_KEY }}
