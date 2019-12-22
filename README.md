@@ -74,6 +74,14 @@ jobs:
           source: 'giphy'
 ```
 
+### Setting GIPHY
+
+The default image source is [LGTM.app](https://www.lgtm.app) but you can also configure [GIPHY](https://giphy.com).
+
+1. Create your app and get API key from [here](https://developers.giphy.com/dashboard).
+2. Set the API key in GitHub repository (Setting > Secret) as `GIPHY_API_KEY`.
+3. Configure `'giphy'` in your GitHub Actions workflow.
+
 ## Projects using `action-lgtm-reaction`
 
 - [Cake Website](https://github.com/cake-build/website)
