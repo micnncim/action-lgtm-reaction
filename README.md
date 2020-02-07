@@ -1,8 +1,9 @@
 ![logo](docs/assets/logo.png)
 
-[![CI](https://github.com/micnncim/action-lgtm-reaction/workflows/CI/badge.svg)](https://github.com/micnncim/action-lgtm-reaction/actions)
-[![Release](https://img.shields.io/github/v/release/micnncim/action-lgtm-reaction.svg?logo=github)](https://github.com/micnncim/action-lgtm-reaction/releases)
-[![Marketplace](https://img.shields.io/badge/marketplace-lgtm--reaction-blue?logo=github)](https://github.com/marketplace/actions/lgtm-reaction)
+[![actions-workflow-CI][actions-workflow-CI-badge]][actions-workflow-CI]
+[![actions-marketplace][actions-marketplace-badge]][actions-marketplace]
+[![release][release-badge]][release]
+[![license][license-badge]][license] 
 
 ![](docs/assets/screen-record.gif)
 
@@ -90,6 +91,14 @@ The default image source is [LGTM.app](https://www.lgtm.app) but you can also co
 
 *Icon made by Freepik from [www.flaticon.com](https://www.flaticon.com)*
 
-## License
+<!-- badge links -->
 
-[MIT License](LICENSE)
+[actions-workflow-CI]: https://github.com/micnncim/action-lgtm-reaction/actions?query=workflow%3ACI
+[actions-marketplace]: https://github.com/marketplace/actions/lgtm-reaction
+[release]: https://github.com/micnncim/action-lgtm-reaction/releases
+[license]: LICENSE
+
+[actions-workflow-CI-badge]: https://img.shields.io/github/workflow/status/micnncim/action-lgtm-reaction/CI?label=CI&style=for-the-badge&logo=github
+[actions-marketplace-badge]: https://img.shields.io/badge/marketplace-lgtm%20reaction-blue?style=for-the-badge&logo=github
+[release-badge]: https://img.shields.io/github/v/release/micnncim/action-lgtm-reaction?style=for-the-badge&logo=github
+[license-badge]: https://img.shields.io/github/license/micnncim/action-lgtm-reaction?style=for-the-badge
