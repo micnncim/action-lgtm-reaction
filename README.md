@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@1.0.0
-      - uses: micnncim/action-lgtm-reaction@
+      - uses: micnncim/action-lgtm-reaction@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
